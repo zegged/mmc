@@ -568,6 +568,59 @@ class gstChannel:
         # Link the pipeline to the sink that will display the video.
         # self._bin.link(self._gtksink)
         """
+
+    def _getFreePort(self):
+        import socket
+        tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        tcp.bind(('', 0))
+        addr, port = tcp.getsockname()
+        tcp.close()
+        print(port)
+        return port
+
+    def _setCamerasWindows(self):
+        print("setting cameras windows")
+
+        port = self._getFreePort()
+
+        cmd = '''C:\\gstreamer\\1.0\\msvc_x86_64\\bin\\gst-launch-1.0.exe'''
+        args = '''mfvideosrc device-index=0 ! decodebin ! videoconvert !  videoscale ! video/x-raw,width=320,height=280 ! mfh264enc  ! rtph264pay ! udpsink host=localhost port=5001'''
+        #args = '''mfvideosrc device-path="\\\\\?\\display\#int3470\#4\&5b5cba1\&1\&uid13424\#\{e5323777-f976-4f5b-9b55-b94699c46e44\}\\\{7c9bbcea-909c-47b3-8cf9-2aa8237e1d4b\}" ! decodebin ! videoconvert !  videoscale ! video/x-raw,width=320,height=280 ! mfh264enc  ! rtph264pay ! udpsink host=localhost port=5001'''
+        #args = '''videotestsrc pattern=1!autovideosink'''
+        arg1 = '''mfvideosrc'''
+        arg2 = '''device-index=2'''
+        #arg3 = '''!autovideosink'''
+        arg3 = '''!decodebin!videoconvert!videoscale!video/x-raw,width=320,height=280!mfh264enc!rtph264pay'''
+        arg4 = """!udpsink"""
+        # arg4 = """!autovideosink"""
+        arg5 = """host=localhost"""
+        arg6 = """port="""+str(port)
+        # arg3 = '''!autovideosink'''
+        print('run')
+        # subprocess.run([cmd,arg1,arg2,arg3,arg4,arg5], shell=True)
+        self._proccessArgs.append([cmd,arg1,arg2,arg3,arg4,arg5,arg6])
+        # subprocess.Popen([cmd,arg1,arg2,arg3,arg4,arg5])
+        #subprocess.run([cmd,args])
+
+        # factory = self._pipeline.get_factory()
+        # gtksink = factory.make('gtksink')
+
+        # p = Gst.parse_launch("v4l2src ! videoconvert ! gtksink name=sink")                                             
+        # p = Gst.parse_launch("videotestsrc ! videoconvert ! gtksink name=sink") 
+        # stringPipeline = """udpsrc uri=udp://localhost:5000 caps = "application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, payload=(int)96" ! rtph264depay ! decodebin ! videoconvert ! queue name=convert ! gtksink name=sink"""                                            
+        stringPipeline = """udpsrc name=udpsrc caps = "application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, payload=(int)96" ! rtph264depay ! decodebin ! videoconvert ! queue name=convert ! gtksink name=sink"""                                            
+        p = Gst.parse_launch(stringPipeline) 
+        udpsrc = p.get_by_name("udpsrc")
+        udpsrc.set_property("uri",f"udp://localhost:{port}")
+        self.udpsrc = udpsrc
+        
+        
+        self._gtksink = p.get_by_name("sink")
+        # box.pack_start(s.props.widget, ...)
+
+        # pipeline.add(self._bin)
+        self._pipeline.add(p)
+
     
     def _play(self):
         # start pre proccess(media foundation)
@@ -583,7 +636,8 @@ class gstChannel:
 
     def _stop(self):
         for pro in self._proccess:
-            pro.kill()
+            # pro.kill()
+            subprocess.Popen("TASKKILL /F /PID {pid} /T".format(pid=pro.pid))
         self._pipeline.set_state(Gst.State.NULL)
 
     def _setInput(self, inputType):
@@ -611,4 +665,7 @@ class gstChannel:
         elif inputType=='USB-Camera':
             print('camera')
             self._setCameras()
+        elif inputType=='USB-Camera(Windows)':
+            print('camera(windows)')
+            self._setCamerasWindows()
 

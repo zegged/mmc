@@ -142,7 +142,7 @@ class myView(Gtk.Window):
         
 
         self._inputs = ["test-src", "local file", "DVB",
-            "Screen Capture", "USB-Camera", "youtube", "torrent",
+            "Screen Capture", "USB-Camera", "USB-Camera(Windows)", "youtube", "torrent",
             "UDP", "TCP", "RTSP", "Audio"]
         self._outputs = ["multi UDP sink"]
 
