@@ -621,6 +621,18 @@ class gstChannel:
         # pipeline.add(self._bin)
         self._pipeline.add(p)
 
+    def _reset(self):
+        pipe = self._pipeline
+        # bus = self._bus
+        bus = pipe.get_bus()
+        bus.remove_signal_watch()
+        # for element in pipe.ge:
+            # print(element)
+        del(self._pipeline)
+        # del(bus)
+        # self._pipeline = None
+        self.__init__()
+
     
     def _play(self):
         # start pre proccess(media foundation)
@@ -643,6 +655,7 @@ class gstChannel:
     def _setInput(self, inputType):
         # self._inputs = [["Select input"], ["test-src"], ["local file"], ["DVB"], ["Screen Capture"], ["USB-Camera"], ["UDP"], ["TCP"], ["RTSP"], ["Audio"]]
         print(f'input set to {inputType}')
+        self._reset()
         if inputType == "test-src":
             print('setting videotestsec')
             self._setTestsrc()
