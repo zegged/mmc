@@ -31,6 +31,15 @@ class Handler:
             att.hide()
 
         # show relevant attribute
+        if source == "USB-Camera(Windows)":
+            print("USB-Camera(Windows)")
+            cameraList = self.builder.get_object("cameraList")
+            cameraList.append(None,"0")
+            cameraList.append(None,"1")
+            cameraList.append(None,"2")
+            cameraList.show()
+            
+
         if source == 'UDP':
             print("UDP")
             port = self.builder.get_object("sourcePort")
@@ -141,7 +150,7 @@ class myView(Gtk.Window):
         self.channelNumber = 0
         
 
-        self._inputs = ["test-src", "local file", "DVB",
+        self._inputs = ["none", "test-src", "local file", "DVB",
             "Screen Capture", "USB-Camera", "USB-Camera(Windows)", "youtube", "torrent",
             "UDP", "TCP", "RTSP", "Audio"]
         self._outputs = ["multi UDP sink"]
@@ -222,6 +231,12 @@ class myView(Gtk.Window):
         s = dialog.get_filename()
         print(s)
         attributes["dialogFilePath"]=s
+
+        # selected camera
+        cameraList = builder.get_object("cameraList")
+        camera = cameraList.get_active_text()
+        print(f"camera {camera}")
+        attributes['device-index']=camera
 
 
 

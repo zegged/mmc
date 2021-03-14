@@ -6,6 +6,7 @@ gi.require_version('Gst', '1.0')
 
 import subprocess
 
+
 class gstChannel:
     @property
     def gtksink(self):
@@ -29,7 +30,8 @@ class gstChannel:
         self.bus.add_signal_watch()
         self.bus.connect("message", self.on_message)
 
-        self._attributes = {}
+        self._attributes = {} # received from view
+        self._properties = {} # needed to be set before play. different for every input/channel
 
         self._proccess = []
         self._proccessArgs = []
@@ -581,6 +583,7 @@ class gstChannel:
     def _setCamerasWindows(self):
         print("setting cameras windows")
 
+
         port = self._getFreePort()
 
         cmd = '''C:\\gstreamer\\1.0\\msvc_x86_64\\bin\\gst-launch-1.0.exe'''
@@ -621,6 +624,23 @@ class gstChannel:
         # pipeline.add(self._bin)
         self._pipeline.add(p)
 
+
+
+        # save function that enables us to change attributes:
+        def setDeviceIndex(deviceIndex):
+            self._proccessArgs[0][2]=f"device-index={deviceIndex}"
+
+        prop = {
+            "name":"device-index",
+            "min":0,
+            "max":3,
+            "default":0,
+            "value":None,
+            "func":setDeviceIndex
+            }
+
+        self._properties["device-index"]=prop
+
     def _reset(self):
         pipe = self._pipeline
         # bus = self._bus
@@ -635,6 +655,20 @@ class gstChannel:
 
     
     def _play(self):
+        att = self._attributes
+        print('attributes',att)
+
+        # set properties form self.attributes received from view
+        for prop in self._properties:
+            print("property",prop)
+            propVal = self._properties[prop]
+            print(propVal)
+            propName = propVal['name']
+            value =  att[propName]
+            print(f"{propName} from view set to {propVal['value']}")
+            propFunc = propVal['func']
+            propFunc(value)
+
         # start pre proccess(media foundation)
         for args in self._proccessArgs:
             # p = subprocess.Popen(proc)
@@ -659,6 +693,8 @@ class gstChannel:
         if inputType == "test-src":
             print('setting videotestsec')
             self._setTestsrc()
+            # t = gstTest()
+
         elif inputType == 'DVB':
             print('DVB')
         elif inputType == 'Screen Capture':
