@@ -29,30 +29,30 @@ class gstChannel:
         # self._output = self._gtksink
         
         # udp output
-        # desc = f'videoconvert ! queue ! x264enc tune=zerolatency ! queue ! rtph264pay ! queue ! multiudpsink name=mudpsink'
-        # udpBin = Gst.parse_bin_from_description(desc, True)
-        # udpsink = udpBin.get_by_name('mudpsink')
-        # self.udpSink = udpsink
+        desc = f'videoconvert ! queue ! x264enc tune=zerolatency ! queue ! rtph264pay ! queue ! multiudpsink name=mudpsink'
+        udpBin = Gst.parse_bin_from_description(desc, True)
+        udpsink = udpBin.get_by_name('mudpsink')
+        self.udpSink = udpsink
         
-        # tee = Gst.ElementFactory.make("tee", "tee-1")  # - fast, but singleton
-        # queue1 = Gst.ElementFactory.make("queue", "queue-1")  
-        # queue2 = Gst.ElementFactory.make("queue", "queue-2")
+        tee = Gst.ElementFactory.make("tee", "tee-1")  # - fast, but singleton
+        queue1 = Gst.ElementFactory.make("queue", "queue-1")  
+        queue2 = Gst.ElementFactory.make("queue", "queue-2")
 
 
-        # self._output = tee
-        self._output = self._gtksink
+        self._output = tee
+        # self._output = self._gtksink
         # self._output = queue1
 
 
-        # self._pipeline.add(self._gtksink)
-        # self._pipeline.add(tee)
-        # self._pipeline.add(queue1)
-        # self._pipeline.add(queue2)
-        # self._pipeline.add(udpBin)
-        # tee.link(queue1)
-        # queue1.link(self._gtksink)
-        # tee.link(queue2)
-        # queue2.link(udpBin)
+        self._pipeline.add(self._gtksink)
+        self._pipeline.add(tee)
+        self._pipeline.add(queue1)
+        self._pipeline.add(queue2)
+        self._pipeline.add(udpBin)
+        tee.link(queue1)
+        queue1.link(self._gtksink)
+        tee.link(queue2)
+        queue2.link(udpBin)
 
   
 
@@ -154,15 +154,16 @@ class gstChannel:
         # self._pipeline.add(sink)
         # p = Gst.parse_launch(stringPipeline) 
         udpsrc = source.get_by_name("udpsrc")
-        udpsrc.set_property("uri","udp://127.0.0.1:5001")
+        # udpsrc.set_property("uri","udp://127.0.0.1:5001")
+        udpsrc.set_property("uri","udp://localhost:5001")
         self.udpsrc = udpsrc
         
         self._pipeline.add(source)
-        self._pipeline.add(self._gtksink)
+        # self._pipeline.add(self._gtksink)
         
-        # source.link(self._output)
+        sink.link(self._output)
         # source.link(self._gtksink)
-        sink.link(self._gtksink)
+        # sink.link(self._gtksink)
 
     def _setUDPold(self):
         # _bin = Gst.parse_bin_from_description(pipeline, True)
