@@ -8,13 +8,13 @@ import subprocess
 
 
 class gstChannel:
-    @property
-    def gtksink(self):
-        try:
-            self._gtksink
-        except Exception:
-            self._gtksink = self.factory.make('gtksink')
-        return self._gtksink
+    # @property
+    # def gtksink(self):
+    #     try:
+    #         self._gtksink
+    #     except Exception:
+    #         self._gtksink = self.factory.make('gtksink')
+    #     return self._gtksink
 
     def __init__(self):
         # create pipeline
@@ -24,6 +24,45 @@ class gstChannel:
 
         # create gtksink by default
         self.factory = self._pipeline.get_factory()
+        self._gtksink = self.factory.make('gtksink')
+        # self._output = self._gtksink
+        
+        # udp output
+        desc = f'videoconvert ! queue ! x264enc tune=zerolatency ! queue ! rtph264pay ! queue ! multiudpsink name=mudpsink'
+        udpBin = Gst.parse_bin_from_description(desc, True)
+        udpsink = udpBin.get_by_name('mudpsink')
+        self.udpSink = udpsink
+        
+        tee = Gst.ElementFactory.make("tee", "tee-1")  # - fast, but singleton
+        queue1 = Gst.ElementFactory.make("queue", "queue-1")  
+        # queue1 = self.factory.make('queue')
+
+        queue2 = Gst.ElementFactory.make("queue", "queue-2")
+        # self._bin.link(tee)
+        # tee.link(queue1)
+        # queue1.link(self._gtksink)
+
+        
+        # tee.link(queue2)
+        # queue2.link(udpBin)
+
+
+        self._output = tee
+        # self._output = self._gtksink
+        # self._output = queue1
+
+
+        # self._pipeline.add(self._output)
+        self._pipeline.add(tee)
+        self._pipeline.add(queue1)
+        self._pipeline.add(self._gtksink)
+        self._pipeline.add(queue2)
+        self._pipeline.add(udpBin)
+        tee.link(queue1)
+        queue1.link(self._gtksink)
+        tee.link(queue2)
+        queue2.link(udpBin)
+
         # ._gtksink = self.factory.make('gtksink')
         # self._testsrc()
         self.bus = self._pipeline.get_bus()
@@ -251,7 +290,30 @@ class gstChannel:
 
         # decode.link(self._gtksink)
 
+    # def _setTestsrc(self):
+    #     sourceStr = "videotestsrc name=source"
+    #     source = Gst.parse_bin_from_description(sourceStr, True)
+    #     self._pipeline.add(source)
+    #     self._pipeline.add(self._gtksink)
+        
+    #     # source.link(self._gtksink)
+    #     # source2 = self._pipeline.get_by_name('source')
+    #     source2 = source.get_by_name('source')
+    #     print('source2',source2)
+    #     source2.link(self._gtksink)
+
     def _setTestsrc(self):
+        sourceStr = "videotestsrc name=source"
+        source = Gst.parse_bin_from_description(sourceStr, True)
+        self._pipeline.add(source)
+        # self._pipeline.add(self._output)
+        source.link(self._output)
+
+
+    def linkOutput(self):
+        pass
+
+    def _setTestsrc2(self):
         # desc = f'videotestsrc ! queue ! decodebin ! videoconvert ! timeoverlay !  x264enc tune=zerolatency ! rtph264pay ! udpsink host=localhost port=5000'
         # desc = f'videoconvert ! queue ! x264enc tune=zerolatency ! queue ! rtph264pay ! queue ! udpsink host=localhost port=5000'
         desc = f'videoconvert ! queue ! x264enc tune=zerolatency ! queue ! rtph264pay ! queue ! multiudpsink name=mudpsink'
@@ -340,24 +402,24 @@ class gstChannel:
 
         # import subprocess
 
-        cmd = '''C:\\gstreamer\\1.0\\msvc_x86_64\\bin\\gst-launch-1.0.exe'''
-        args = '''mfvideosrc device-index=0 ! decodebin ! videoconvert !  videoscale ! video/x-raw,width=320,height=280 ! mfh264enc  ! rtph264pay ! udpsink host=localhost port=5001'''
-        #args = '''mfvideosrc device-path="\\\\\?\\display\#int3470\#4\&5b5cba1\&1\&uid13424\#\{e5323777-f976-4f5b-9b55-b94699c46e44\}\\\{7c9bbcea-909c-47b3-8cf9-2aa8237e1d4b\}" ! decodebin ! videoconvert !  videoscale ! video/x-raw,width=320,height=280 ! mfh264enc  ! rtph264pay ! udpsink host=localhost port=5001'''
-        #args = '''videotestsrc pattern=1!autovideosink'''
-        arg1 = '''mfvideosrc'''
-        arg2 = '''device-index=2'''
-        #arg3 = '''!autovideosink'''
-        arg3 = '''!decodebin!videoconvert!videoscale!video/x-raw,width=320,height=280!mfh264enc!rtph264pay'''
-        arg4 = """!udpsink"""
-        # arg4 = """!autovideosink"""
-        arg5 = """host=localhost"""
-        arg6 = """port=5001"""
-        # arg3 = '''!autovideosink'''
-        print('run')
-        # subprocess.run([cmd,arg1,arg2,arg3,arg4,arg5], shell=True)
-        self._proccessArgs.append([cmd,arg1,arg2,arg3,arg4,arg5,arg6])
-        # subprocess.Popen([cmd,arg1,arg2,arg3,arg4,arg5])
-        #subprocess.run([cmd,args])
+        # cmd = '''C:\\gstreamer\\1.0\\msvc_x86_64\\bin\\gst-launch-1.0.exe'''
+        # args = '''mfvideosrc device-index=0 ! decodebin ! videoconvert !  videoscale ! video/x-raw,width=320,height=280 ! mfh264enc  ! rtph264pay ! udpsink host=localhost port=5001'''
+        # #args = '''mfvideosrc device-path="\\\\\?\\display\#int3470\#4\&5b5cba1\&1\&uid13424\#\{e5323777-f976-4f5b-9b55-b94699c46e44\}\\\{7c9bbcea-909c-47b3-8cf9-2aa8237e1d4b\}" ! decodebin ! videoconvert !  videoscale ! video/x-raw,width=320,height=280 ! mfh264enc  ! rtph264pay ! udpsink host=localhost port=5001'''
+        # #args = '''videotestsrc pattern=1!autovideosink'''
+        # arg1 = '''mfvideosrc'''
+        # arg2 = '''device-index=2'''
+        # #arg3 = '''!autovideosink'''
+        # arg3 = '''!decodebin!videoconvert!videoscale!video/x-raw,width=320,height=280!mfh264enc!rtph264pay'''
+        # arg4 = """!udpsink"""
+        # # arg4 = """!autovideosink"""
+        # arg5 = """host=localhost"""
+        # arg6 = """port=5001"""
+        # # arg3 = '''!autovideosink'''
+        # print('run')
+        # # subprocess.run([cmd,arg1,arg2,arg3,arg4,arg5], shell=True)
+        # self._proccessArgs.append([cmd,arg1,arg2,arg3,arg4,arg5,arg6])
+        # # subprocess.Popen([cmd,arg1,arg2,arg3,arg4,arg5])
+        # #subprocess.run([cmd,args])
 
 
         import os

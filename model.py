@@ -16,7 +16,7 @@ class myModel:
         return (len(self._channels)-1)
 
     def _getGtksink(self, channelNum):
-        return self._channels[channelNum].gtksink
+        return self._channels[channelNum]._gtksink
 
     # def _setTestsrc(self, channelNum):
     #     self._channels[channelNum]._setTestsrc()
