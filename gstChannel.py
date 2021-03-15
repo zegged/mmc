@@ -24,47 +24,42 @@ class gstChannel:
 
         # create gtksink by default
         self.factory = self._pipeline.get_factory()
-        self._gtksink = self.factory.make('gtksink')
+        # self._gtksink = self.factory.make('gtksink')
+        self._gtksink = Gst.ElementFactory.make("gtksink", "sink") 
         # self._output = self._gtksink
         
         # udp output
-        desc = f'videoconvert ! queue ! x264enc tune=zerolatency ! queue ! rtph264pay ! queue ! multiudpsink name=mudpsink'
-        udpBin = Gst.parse_bin_from_description(desc, True)
-        udpsink = udpBin.get_by_name('mudpsink')
-        self.udpSink = udpsink
+        # desc = f'videoconvert ! queue ! x264enc tune=zerolatency ! queue ! rtph264pay ! queue ! multiudpsink name=mudpsink'
+        # udpBin = Gst.parse_bin_from_description(desc, True)
+        # udpsink = udpBin.get_by_name('mudpsink')
+        # self.udpSink = udpsink
         
-        tee = Gst.ElementFactory.make("tee", "tee-1")  # - fast, but singleton
-        queue1 = Gst.ElementFactory.make("queue", "queue-1")  
-        # queue1 = self.factory.make('queue')
-
-        queue2 = Gst.ElementFactory.make("queue", "queue-2")
-        # self._bin.link(tee)
-        # tee.link(queue1)
-        # queue1.link(self._gtksink)
-
-        
-        # tee.link(queue2)
-        # queue2.link(udpBin)
+        # tee = Gst.ElementFactory.make("tee", "tee-1")  # - fast, but singleton
+        # queue1 = Gst.ElementFactory.make("queue", "queue-1")  
+        # queue2 = Gst.ElementFactory.make("queue", "queue-2")
 
 
-        self._output = tee
-        # self._output = self._gtksink
+        # self._output = tee
+        self._output = self._gtksink
         # self._output = queue1
 
 
-        # self._pipeline.add(self._output)
-        self._pipeline.add(tee)
-        self._pipeline.add(queue1)
-        self._pipeline.add(self._gtksink)
-        self._pipeline.add(queue2)
-        self._pipeline.add(udpBin)
-        tee.link(queue1)
-        queue1.link(self._gtksink)
-        tee.link(queue2)
-        queue2.link(udpBin)
+        # self._pipeline.add(self._gtksink)
+        # self._pipeline.add(tee)
+        # self._pipeline.add(queue1)
+        # self._pipeline.add(queue2)
+        # self._pipeline.add(udpBin)
+        # tee.link(queue1)
+        # queue1.link(self._gtksink)
+        # tee.link(queue2)
+        # queue2.link(udpBin)
 
-        # ._gtksink = self.factory.make('gtksink')
-        # self._testsrc()
+  
+
+
+
+
+
         self.bus = self._pipeline.get_bus()
         self.bus.add_signal_watch()
         self.bus.connect("message", self.on_message)
@@ -147,9 +142,29 @@ class gstChannel:
 
 
             
-
-
     def _setUDP(self):
+        # sourceStr = "videotestsrc name=source"
+        # sourceStr = """udpsrc name=udpsrc caps = "application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, payload=(int)96" ! rtph264depay ! decodebin ! videoconvert ! queue ! gtksink name=sink"""                                            
+        sourceStr = """udpsrc name=udpsrc caps = "application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, payload=(int)96" ! rtph264depay ! decodebin ! videoconvert ! queue name=sink"""                                            
+        # source = Gst.parse_bin_from_description(sourceStr, True)
+        source = Gst.parse_launch(sourceStr) # working, not parse_bin
+        sink = source.get_by_name("sink")
+        # self._output = sink
+        # self._gtksink = sink
+        # self._pipeline.add(sink)
+        # p = Gst.parse_launch(stringPipeline) 
+        udpsrc = source.get_by_name("udpsrc")
+        udpsrc.set_property("uri","udp://127.0.0.1:5001")
+        self.udpsrc = udpsrc
+        
+        self._pipeline.add(source)
+        self._pipeline.add(self._gtksink)
+        
+        # source.link(self._output)
+        # source.link(self._gtksink)
+        sink.link(self._gtksink)
+
+    def _setUDPold(self):
         # _bin = Gst.parse_bin_from_description(pipeline, True)
         # pipeline = Gst.Pipeline()
         # bus = self._pipeline.get_bus()
@@ -390,7 +405,47 @@ class gstChannel:
         queue3.link(autovideosink)
         print('ahoy')
 
+
+
     def _setScreenCapture(self):
+        import os
+        if os.name == 'posix':
+            print('linux')
+            source = Gst.ElementFactory.make("ximagesrc", "test-source") # - linux
+        else:  # if os.name == 'nt':
+            print('windows')
+            source = Gst.ElementFactory.make("dxgiscreencapsrc", "test-source") # - fast, but singleton
+
+        if not source:
+            print('source error')
+            return
+
+
+        convert = Gst.ElementFactory.make("videoconvert", "source-convert")
+        scale = Gst.ElementFactory.make("videoscale", "source-scale")
+
+        caps = Gst.Caps.from_string("video/x-raw, width=200,height=200")
+        filter = Gst.ElementFactory.make("capsfilter", "filter")
+        filter.set_property("caps", caps)
+
+        self._pipeline.add(source)
+        self._pipeline.add(filter)
+        self._pipeline.add(convert)
+        self._pipeline.add(scale)
+
+        source.link(convert)
+        convert.link(scale)
+        scale.link(filter)
+        filter.link(self._output)
+
+        # sourceStr = "videotestsrc name=source"
+        # source = Gst.parse_bin_from_description(sourceStr, True)
+        # self._pipeline.add(source)
+        # # self._pipeline.add(self._output)
+        # source.link(self._output)
+
+
+    def _setScreenCapture2(self):
         # stringPipeline = "videotestsrc pattern=1"
         # self._bin = Gst.parse_bin_from_description(stringPipeline, True)
         # self._src = self.factory.make('videotestsrc')
