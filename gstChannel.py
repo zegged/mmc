@@ -165,6 +165,26 @@ class gstChannel:
         # source.link(self._gtksink)
         # sink.link(self._gtksink)
 
+
+        # save function that enables us to change attributes:
+        def setPortNumber(port):
+            print("setting port to",port)
+            self.udpsrc.set_property("uri",f"udp://localhost:{port}")
+            
+        
+
+
+        prop = {
+            "name":"sourcePort",
+            "min":0,
+            "max":3,
+            "default":0,
+            "value":None,
+            "func":setPortNumber
+            }
+
+        self._properties["device-index"]=prop
+
     def _setUDPold(self):
         # _bin = Gst.parse_bin_from_description(pipeline, True)
         # pipeline = Gst.Pipeline()
