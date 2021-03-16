@@ -829,6 +829,7 @@ class gstChannel:
     def _setInput(self, inputType):
         # self._inputs = [["Select input"], ["test-src"], ["local file"], ["DVB"], ["Screen Capture"], ["USB-Camera"], ["UDP"], ["TCP"], ["RTSP"], ["Audio"]]
         print(f'input set to {inputType}')
+        self._stop()
         self._reset()
         if inputType == "test-src":
             print('setting videotestsec')
