@@ -749,18 +749,20 @@ class gstChannel:
         # p = Gst.parse_launch("v4l2src ! videoconvert ! gtksink name=sink")                                             
         # p = Gst.parse_launch("videotestsrc ! videoconvert ! gtksink name=sink") 
         # stringPipeline = """udpsrc uri=udp://localhost:5000 caps = "application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, payload=(int)96" ! rtph264depay ! decodebin ! videoconvert ! queue name=convert ! gtksink name=sink"""                                            
-        stringPipeline = """udpsrc name=udpsrc caps = "application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, payload=(int)96" ! rtph264depay ! decodebin ! videoconvert ! queue name=convert ! gtksink name=sink"""                                            
+        # stringPipeline = """udpsrc name=udpsrc caps = "application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, payload=(int)96" ! rtph264depay ! decodebin ! videoconvert ! queue name=convert ! gtksink name=sink"""                                            
+        stringPipeline = """udpsrc name=udpsrc caps = "application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, payload=(int)96" ! rtph264depay ! decodebin ! videoconvert ! queue name=sink"""                                            
         p = Gst.parse_launch(stringPipeline) 
         udpsrc = p.get_by_name("udpsrc")
         udpsrc.set_property("uri",f"udp://localhost:{port}")
         self.udpsrc = udpsrc
         
         
-        self._gtksink = p.get_by_name("sink")
+        sink = p.get_by_name("sink")
         # box.pack_start(s.props.widget, ...)
 
         # pipeline.add(self._bin)
         self._pipeline.add(p)
+        sink.link(self._output)
 
 
 
