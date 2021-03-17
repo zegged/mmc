@@ -6,6 +6,7 @@ from gi.repository import Gtk, Gst  # ,GObject
 from view import myView
 from model import myModel
 
+from server import Server
 
 Gst.init(None)
 Gst.init_check(None)
@@ -94,6 +95,18 @@ if __name__ == "__main__":
     # model
     controller = myController(view, model)
 
+
+    # import asyncio
+    import threading
+
+    def run_asyncio():
+        server = Server()
+        server.run()
+    
+    threading.Thread(target=run_asyncio).start()
+
+    
+    # asyncio.run(server.main())
     # Create a gstreamer pipeline with no sink. 
     # A sink will be created inside the GstWidget.
     # widget = GstWidget('videotestsrc')
