@@ -12,7 +12,8 @@ class Handler:
 
     def onDestroy(self, *args):
         print("view destroy")
-        Gtk.main_quit()
+        # Gtk.main_quit()
+        self.view.emit("destroy")
 
     def onButtonPressed(self, button):
         print("Hello World!")

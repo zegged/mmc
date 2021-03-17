@@ -6,26 +6,63 @@ from gi.repository import Gtk, Gst  # ,GObject
 from view import myView
 from model import myModel
 
-from server import Server
+from server import myServer
+
+import threading
 
 Gst.init(None)
 Gst.init_check(None)
 
 
 class myController(object):
-    def __init__(self, view, model):
+    def __init__(self, view, model, server):
         self._view = view
         self._model = model
+        self._server = server
+        
+
+        def run_asyncio():
+            # server = Server()
+            self._server.run()
+    
+        self._tServer = threading.Thread(target=run_asyncio).start()
+
         self._view.connect('button-addChannel-clicked', self._addVideo)
         self._view.connect('button-startChannel-clicked', self._startVideo)
         self._view.connect('button-stopChannel-clicked', self._stopVideo)
         self._view.connect('combobox-input-changed', self._inputChanged)
-        # self._view.connect('destroy', self.on_destroy)
+        self._view.connect('destroy', self.on_destroy)
         self._view.connect('button-addClient-clicked', self._addClient)
+
+        # self._server.connect('message', self._message)
+
+    def message(self, message):
+        print('got message',message)
+        if message=='add':
+            self._addVid()
+
+    def close_all(self):
+        Gtk.main_quit()
+        self._server.stop()
+
 
     def on_destroy(self, win):
         # print("bye bye")
-        Gtk.main_quit()
+        # self._tServer.
+        # self.tServer.
+        self.close_all()
+
+
+    def _addVid(self):        
+        print("add video")
+        # model
+        channelNum = self._model._createChannel()
+        print(f"channel {channelNum} created")
+        # self._channels.append(channel)
+        # pass sink to view
+        _gtksink = self._model._getGtksink(channelNum)  # TODO remove + dependent
+        self._view._addVideoView(channelNum)
+        # self._view._setVideoView(gtksink, channelNum)
 
     def _addVideo(self, button):
         print("add video")
@@ -86,6 +123,7 @@ if __name__ == "__main__":
 
     view = myView()
     model = myModel()
+    server = myServer()
 
     # vbox = Gtk.VBox()
 
@@ -93,17 +131,19 @@ if __name__ == "__main__":
     # window.add(vbox)
 
     # model
-    controller = myController(view, model)
+    controller = myController(view, model, server)
+
+    server.setController(controller)
 
 
-    # import asyncio
-    import threading
+    # # import asyncio
+    # import threading
 
-    def run_asyncio():
-        server = Server()
-        server.run()
+    # def run_asyncio():
+    #     server = Server()
+    #     server.run()
     
-    threading.Thread(target=run_asyncio).start()
+    # threading.Thread(target=run_asyncio).start()
 
     
     # asyncio.run(server.main())
