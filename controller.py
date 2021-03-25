@@ -25,9 +25,11 @@ class myController(object):
             # server = Server()
             self._server.run()
     
-        self._tServer = threading.Thread(target=run_asyncio).start()
+        self._tServer = threading.Thread(target=run_asyncio)
+        self._tServer.daemon = True
+        self._tServer.start()
 
-        self._view.connect('button-addChannel-clicked', self._addVideo)
+        self._view.connect('button-addChannel-clicked', self._addVideoButton)
         self._view.connect('button-startChannel-clicked', self._startVideo)
         self._view.connect('button-stopChannel-clicked', self._stopVideo)
         self._view.connect('combobox-input-changed', self._inputChanged)
@@ -39,11 +41,11 @@ class myController(object):
     def message(self, message):
         print('got message',message)
         if message=='add':
-            self._addVid()
+            self._addVideo()
 
     def close_all(self):
+        # self._server.stop()
         Gtk.main_quit()
-        self._server.stop()
 
 
     def on_destroy(self, win):
@@ -53,18 +55,10 @@ class myController(object):
         self.close_all()
 
 
-    def _addVid(self):        
-        print("add video")
-        # model
-        channelNum = self._model._createChannel()
-        print(f"channel {channelNum} created")
-        # self._channels.append(channel)
-        # pass sink to view
-        _gtksink = self._model._getGtksink(channelNum)  # TODO remove + dependent
-        self._view._addVideoView(channelNum)
-        # self._view._setVideoView(gtksink, channelNum)
+    def _addVideoButton(self, button):        
+        self._addVideo()
 
-    def _addVideo(self, button):
+    def _addVideo(self):
         print("add video")
         # model
         channelNum = self._model._createChannel()
@@ -117,13 +111,20 @@ class myController(object):
 
 
 
+def main():
+    view = myView()
+    model = myModel()
+    server = myServer()
+    controller = myController(view, model, server)
+
+    server.setController(controller)
+    Gtk.main()
 
 if __name__ == "__main__":
     # window = Gtk.ApplicationWindow()
 
-    view = myView()
-    model = myModel()
-    server = myServer()
+
+    main()
 
     # vbox = Gtk.VBox()
 
@@ -131,9 +132,7 @@ if __name__ == "__main__":
     # window.add(vbox)
 
     # model
-    controller = myController(view, model, server)
 
-    server.setController(controller)
 
 
     # # import asyncio
@@ -159,4 +158,4 @@ if __name__ == "__main__":
 
     # window.show_all()
 
-Gtk.main()
+

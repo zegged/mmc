@@ -1,5 +1,6 @@
 import asyncio
 from gi.repository import Gtk, GObject
+import time
 class myServer:
     def setController(self, controller):
         self._controller=controller
@@ -13,7 +14,10 @@ class myServer:
             addr = writer.get_extra_info('peername')
 
             print(f"Received {message!r} from {addr!r}")
-            self._controller.message(message)
+            def test():
+                self._controller.message("add")
+            GObject.idle_add(test)
+            
             print(f"Send: {message!r}")
             writer.write(data)
             await writer.drain()
@@ -39,7 +43,10 @@ class myServer:
         print('stopping asyncio')
         self.aServer.close()
         # await self.aServer.wait_closed()
-        
+        # while self.aServer.wait_closed() == False:
+        #     print("waiting for server to close")
+        #     time.sleep(1)
+
         
         # self.loop.close()
         # loop = asyncio.get_event_loop()
