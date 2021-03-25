@@ -6,12 +6,12 @@ async def tcp_echo_client(message):
 
 
     while(True):
-        inp = input(">")
-        if inp == "exit()":
-            writer.write("close".encode())
-            break
+        # inp = input(">")
+        # if inp == "exit()":
+        #     writer.write("close".encode())
+        #     break
 
-        writer.write(inp.encode())
+        # writer.write(inp.encode())
         data = await  reader.read(100)
         print(f'server>{data!r}')
     # print(f'Send: {message!r}')

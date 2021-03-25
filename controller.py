@@ -68,6 +68,7 @@ class myController(object):
         _gtksink = self._model._getGtksink(channelNum)  # TODO remove + dependent
         self._view._addVideoView(channelNum)
         # self._view._setVideoView(gtksink, channelNum)
+        self._server.broadcast()
 
 
 
