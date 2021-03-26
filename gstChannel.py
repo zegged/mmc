@@ -128,7 +128,7 @@ class gstChannel:
 
 
         # stringPipeline = """ksvideosrc device-index=0 ! videoconvert ! queue ! tee name=t ! gtksink name=sink t. ! queue name=out1"""                                            
-        stringPipeline = """v4l2src name=source! videoconvert ! queue name=out1 ! autovideosink name=sink"""                                            
+        stringPipeline = """v4l2src name=src ! videoconvert ! queue name=out1 ! autovideosink name=sink"""                                            
         # p = Gst.parse_launch(stringPipeline) 
         p = Gst.parse_bin_from_description(stringPipeline,True)
         # self._gtksink = p.get_by_name("sink")
@@ -150,7 +150,7 @@ class gstChannel:
         
         # queue1 = Gst.ElementFactory.make("queue", "queue-1")  
         # queue2 = Gst.ElementFactory.make("queue", "queue-2")
-        self.source = p.get_by_name("source")
+        self.source = p.get_by_name("src")
 
 
         # save function that enables us to change attributes:
@@ -158,7 +158,7 @@ class gstChannel:
             self.source.set_property("device",deviceIndex)
 
         prop = {
-            "name":"device",
+            "name":"device-index",
             "min":0,
             "max":3,
             "default":0,
@@ -166,7 +166,7 @@ class gstChannel:
             "func":setDevice
             }
 
-        self._properties["device"]=prop
+        self._properties["device-index"]=prop
         
 
 
