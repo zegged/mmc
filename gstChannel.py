@@ -81,8 +81,8 @@ class gstChannel:
             # self.player.set_state(Gst.State.NULL)
         elif typ == Gst.MessageType.STATE_CHANGED:
             print(message.parse_state_changed()[1])
-        else:
-            print('else', typ)
+        # else:
+        #     print('else', typ)
 
 
     def _setAttributes(self, attributes):
