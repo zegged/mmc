@@ -32,16 +32,24 @@ class Handler:
             att.hide()
 
         # show relevant attribute
-        if source == "USB-Camera(Windows)" or source == "USB-Camera":
+        if source == "USB-Camera(Windows)":
             print("USB-Camera(Windows)")
             cameraList = self.builder.get_object("cameraList")
             cameraList.append(None,"0")
             cameraList.append(None,"1")
             cameraList.append(None,"2")
             cameraList.show()
-            
 
-        if source == 'UDP':
+
+        elif source == "USB-Camera":
+            print("USB-Camera(Windows)")
+            cameraList = self.builder.get_object("cameraList")
+            cameraList.append(None,"/dev/camera0")
+            cameraList.append(None,"/dev/camera1")
+            cameraList.append(None,"/dev/camera2")
+            cameraList.show()  
+
+        elif source == 'UDP':
             print("UDP")
             port = self.builder.get_object("sourcePort")
             port.show()
