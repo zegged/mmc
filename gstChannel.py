@@ -98,12 +98,14 @@ class gstChannel:
         def get_ksvideosrc_device_indexes():
             # https://stackoverflow.com/questions/30440134/list-device-names-available-for-video-capture-from-ksvideosrc-in-gstreamer-1-0
             device_index = 0
-            video_src = Gst.ElementFactory.make('ksvideosrc')
+            # video_src = Gst.ElementFactory.make('ksvideosrc')
+            video_src = Gst.ElementFactory.make('v4l2src')
             state_change_code = None
 
             while True:
                 video_src.set_state(Gst.State.NULL)
-                video_src.set_property('device-index', device_index)
+                # video_src.set_property('device-index', device_index)
+                video_src.set_property('device', """/dev/video""" + str(device_index))
                 state_change_code = video_src.set_state(Gst.State.READY)
                 if state_change_code != Gst.StateChangeReturn.SUCCESS:
                     video_src.set_state(Gst.State.NULL)
@@ -125,14 +127,24 @@ class gstChannel:
         self.udpSink = udpsink
 
 
-        stringPipeline = """ksvideosrc device-index=0 ! videoconvert ! queue ! tee name=t ! gtksink name=sink t. ! queue name=out1"""                                            
-        p = Gst.parse_launch(stringPipeline) 
-        self._gtksink = p.get_by_name("sink")
+        # stringPipeline = """ksvideosrc device-index=0 ! videoconvert ! queue ! tee name=t ! gtksink name=sink t. ! queue name=out1"""                                            
+        stringPipeline = """v4l2src ! videoconvert ! queue name=out1 ! autovideosink name=sink"""                                            
+        # p = Gst.parse_launch(stringPipeline) 
+        p = Gst.parse_bin_from_description(stringPipeline,True)
+        # self._gtksink = p.get_by_name("sink")
+
+        # hack to bypass caps, not-linked
+        sink = p.get_by_name("sink")
+        print('numchildren')
+        print(p.numchildren)
+        p.remove(sink)
+        print(p.numchildren)
+
         self._pipeline.add(p)
 
         out = p.get_by_name("out1")
-        self._pipeline.add(udpBin)
-        out.link(udpBin)
+        # self._pipeline.add(udpBin)
+        out.link(self._output)
 
         # tee = Gst.ElementFactory.make("tee", "tee-1")  # - fast, but singleton
         
