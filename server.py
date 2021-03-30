@@ -60,7 +60,21 @@ class myServer:
             await server.serve_forever()
 
     def run(self):
-        self.loop = asyncio.run(self.main()) 
+        # self.loop = asyncio.run(self.main()) # inroduced python 3.7
+        
+        
+        # python 3.6
+
+        ## Define an instance of an event loop
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+        # self.loop = asyncio.get_event_loop()
+        ## Tell this event loop to run until all the tasks assigned
+        ## to it are complete. In this example just the execution of
+        ## our myCoroutine() coroutine.
+        self.loop.run_until_complete(self.main())
+        ## Tidying up our loop by calling close()
+        self.loop.close() 
         print('done')   
 
     def stop(self):
