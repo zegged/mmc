@@ -15,19 +15,13 @@ Gst.init_check(None)
 
 
 class myController(object):
-    def __init__(self, view, model, server):
-        self._view = view
-        self._model = model
-        self._server = server
+    def __init__(self):
+        self._view = myView(self)
+        self._model = myModel(self)
+        self._server = myServer(self)
         
 
-        def run_asyncio():
-            # server = Server()
-            self._server.run()
-    
-        self._tServer = threading.Thread(target=run_asyncio)
-        self._tServer.daemon = True
-        self._tServer.start()
+
 
         self._view.connect('button-addChannel-clicked', self._addVideoButton)
         self._view.connect('button-startChannel-clicked', self._startVideo)
@@ -37,6 +31,17 @@ class myController(object):
         self._view.connect('button-addClient-clicked', self._addClient)
 
         # self._server.connect('message', self._message)
+    def startView(self):
+        self._view._run()
+
+    def startServer(self):
+        def run_asyncio():
+            # server = Server()
+            self._server.run()
+    
+        self._tServer = threading.Thread(target=run_asyncio)
+        self._tServer.daemon = True
+        self._tServer.start()
 
     def message(self, message):
         print('got message',message)
@@ -113,50 +118,14 @@ class myController(object):
 
 
 def main():
-    view = myView()
-    model = myModel()
-    server = myServer()
-    controller = myController(view, model, server)
+    controller = myController()
+    controller.startServer()
+    controller.startView()
 
-    server.setController(controller)
-    Gtk.main()
+    # Gtk.main()
 
 if __name__ == "__main__":
-    # window = Gtk.ApplicationWindow()
-
-
     main()
 
-    # vbox = Gtk.VBox()
-
-    # window
-    # window.add(vbox)
-
-    # model
-
-
-
-    # # import asyncio
-    # import threading
-
-    # def run_asyncio():
-    #     server = Server()
-    #     server.run()
-    
-    # threading.Thread(target=run_asyncio).start()
-
-    
-    # asyncio.run(server.main())
-    # Create a gstreamer pipeline with no sink. 
-    # A sink will be created inside the GstWidget.
-    # widget = GstWidget('videotestsrc')
-    # widget.set_size_request(200, 200)
-
-    # vbox.add(widget)
-    # button = Gtk.Button("Start")
-    # button.connect("clicked", controller.addVideo)
-    # vbox.add(button)
-
-    # window.show_all()
 
 

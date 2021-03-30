@@ -4,8 +4,10 @@ class myModel:
     def greetee(self):
         return 'World'
 
-    def __init__(self):
+    def __init__(self, controller):
+        self._controller=controller
         self._channels = []
+
 
     def _createChannel(self):
         print("model add (create) channel")

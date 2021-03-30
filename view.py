@@ -151,10 +151,10 @@ class myView(Gtk.Window):
         'combobox-input-changed': (GObject.SignalFlags.RUN_FIRST, None, (int, str,)),
         'button-addClient-clicked': (GObject.SignalFlags.RUN_FIRST, None, (int, str, str,))
     }
-    def __init__(self, **kw):
+    def __init__(self, controller, **kw):
         super(myView, self).__init__(
             default_width=100, default_height=100, **kw)
-
+        self._controller=controller
         self._channels = {}
         self.channelNumber = 0
         
@@ -214,6 +214,8 @@ class myView(Gtk.Window):
 
 
         # self._hideAttributes()
+    def _run(self):
+        Gtk.main()
 
 
     def _update(self):

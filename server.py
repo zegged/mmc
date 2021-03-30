@@ -2,10 +2,11 @@ import asyncio
 from gi.repository import Gtk, GObject
 import time
 class myServer:
-    def setController(self, controller):
+    def __init__(self, controller):
         self._controller=controller
         self._users = {}
-        self.loop = None
+        self.loop = None       
+
 
     def broadcast(self):
         coro = self.broadcast_async()
