@@ -6,7 +6,7 @@ from gi.repository import Gtk, Gst  # ,GObject
 from view import myView
 from model import myModel
 
-from server import myServer
+from test import myServer
 
 import threading
 
