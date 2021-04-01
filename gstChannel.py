@@ -29,7 +29,8 @@ class gstChannel:
         # self._output = self._gtksink
         
         # udp output
-        desc = f'videoconvert ! queue ! x264enc tune=zerolatency ! queue ! rtph264pay ! queue ! multiudpsink name=mudpsink'
+        # desc = f'videoconvert ! queue ! x264enc tune=zerolatency ! queue ! rtph264pay ! queue ! multiudpsink name=mudpsink'
+        desc = f'nvvidconv  ! queue ! omxh264enc  ! queue ! h264parse ! queue ! rtph264pay config-interval=1 ! queue ! multiudpsink name=mudpsink'
         udpBin = Gst.parse_bin_from_description(desc, True)
         udpsink = udpBin.get_by_name('mudpsink')
         self.udpSink = udpsink
@@ -174,7 +175,15 @@ class gstChannel:
     def _setUDP(self):
         # sourceStr = "videotestsrc name=source"
         # sourceStr = """udpsrc name=udpsrc caps = "application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, payload=(int)96" ! rtph264depay ! decodebin ! videoconvert ! queue ! gtksink name=sink"""                                            
-        sourceStr = """udpsrc name=udpsrc caps = "application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, payload=(int)96" ! rtph264depay ! decodebin ! videoconvert ! queue name=sink"""                                            
+        
+        
+        
+        # sourceStr = """udpsrc name=udpsrc caps = "application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, payload=(int)96" ! rtph264depay ! decodebin ! videoconvert ! queue name=sink"""
+        sourceStr = """udpsrc name=udpsrc caps = "application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, payload=(int)96" ! rtph264depay ! decodebin ! nvvidconv  ! queue name=sink"""
+        
+        
+        
+        
         # source = Gst.parse_bin_from_description(sourceStr, True)
         source = Gst.parse_launch(sourceStr) # working, not parse_bin
         sink = source.get_by_name("sink")
