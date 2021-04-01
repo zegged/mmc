@@ -6,6 +6,8 @@ gi.require_version('Gst', '1.0')
 
 import subprocess
 
+import platform
+
 
 class gstChannel:
     # @property
@@ -29,8 +31,19 @@ class gstChannel:
         # self._output = self._gtksink
         
         # udp output
-        # desc = f'videoconvert ! queue ! x264enc tune=zerolatency ! queue ! rtph264pay ! queue ! multiudpsink name=mudpsink'
-        desc = f'nvvidconv  ! queue ! omxh264enc  ! queue ! h264parse ! queue ! rtph264pay config-interval=1 ! queue ! multiudpsink name=mudpsink'
+        fullStr = platform.platform()
+        system = platform.system()
+        if system=='Linux':
+            dist=platform.dist()
+        release = platform.release()
+        version = platform.version()
+
+
+        desc = ""
+        if system=='Windows' or (system=='Linux' and release=='rpi'): # TODO: fix rpi
+            desc = f'videoconvert ! queue ! x264enc tune=zerolatency ! queue ! rtph264pay ! queue ! multiudpsink name=mudpsink'    
+        elif system=='Linux' and 'tegra' in release:
+            desc = f'nvvidconv  ! queue ! omxh264enc  ! queue ! h264parse ! queue ! rtph264pay config-interval=1 ! queue ! multiudpsink name=mudpsink'
         udpBin = Gst.parse_bin_from_description(desc, True)
         udpsink = udpBin.get_by_name('mudpsink')
         self.udpSink = udpsink
@@ -178,8 +191,17 @@ class gstChannel:
         
         
         
-        # sourceStr = """udpsrc name=udpsrc caps = "application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, payload=(int)96" ! rtph264depay ! decodebin ! videoconvert ! queue name=sink"""
-        sourceStr = """udpsrc name=udpsrc caps = "application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, payload=(int)96" ! rtph264depay ! decodebin ! nvvidconv  ! queue name=sink"""
+        sourceStr = """"""
+
+        fullStr = platform.platform()
+        system = platform.system()
+        release = platform.release()
+        version = platform.version()
+
+        if system=='Windows' or (system=='Linux' and release=='rpi'): # TODO: fix rpi
+            sourceStr = """udpsrc name=udpsrc caps = "application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, payload=(int)96" ! rtph264depay ! decodebin ! videoconvert ! queue name=sink"""
+        elif system=='Linux' and 'tegra' in release:
+            sourceStr = """udpsrc name=udpsrc caps = "application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, payload=(int)96" ! rtph264depay ! decodebin ! nvvidconv  ! queue name=sink"""
         
         
         
