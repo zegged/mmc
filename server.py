@@ -5,7 +5,8 @@ class myServer:
     def __init__(self, controller):
         self._controller=controller
         self._users = {}
-        self.loop = None       
+        self._loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self._loop)      
 
 
     def broadcast(self):
@@ -13,69 +14,60 @@ class myServer:
         # self.loop.
         # loop = asyncio.get_event_loop()
         # future = asyncio.run_coroutine_threadsafe(coro,loop)
-        asyncio.run(coro)
+        # asyncio.run(coro)
+        asyncio.run_coroutine_threadsafe(coro, self._loop)
         # future.result()
 
 
-    async def broadcast_async(self):
+    def broadcast_async(self):
         print('broadcasting')
         for user in self._users.keys():
             writer = self._users[user]['writer']
             data = 'hello'.encode()
             writer.write(data)
-            await writer.drain()
+            yield from writer.drain()
         return "done"
 
-    
-    async def handle_echo(self,reader, writer):
+    @asyncio.coroutine
+    def handle_echo(self,reader, writer):
         writer.write("hello".encode())
         addr = writer.get_extra_info('peername')
         self._users[addr]={'reader':reader,'writer':writer}
         while True:
-            data = await reader.read(100)
+            data = yield from reader.read(100)
             message = data.decode()
             if message=="close":
                 break
 
             print(f"Received {message!r} from {addr!r}")
-            def test():
-                self._controller.message("add")
-            GObject.idle_add(test)
+            
+            self._controller.message("add")
+            
             
             print(f"Send: {message!r}")
             writer.write(data)
-            await writer.drain()
+            yield from writer.drain()
 
         print("Close the connection")
         writer.close()
 
-    async def main(self):
-        server = await asyncio.start_server(
-            self.handle_echo, '127.0.0.1', 8888)
-        self.aServer = server
-        addr = server.sockets[0].getsockname()
-        print(f'Serving on {addr}')
 
-        async with server:
-            await server.serve_forever()
 
     def run(self):
-        # self.loop = asyncio.run(self.main()) # inroduced python 3.7
-        
-        
-        # python 3.6
+        coro = asyncio.start_server(self.handle_echo, '127.0.0.1', 8888, loop=self._loop)
+        server = self._loop.run_until_complete(coro)
+        self.aServer = server
+        # Serve requests until Ctrl+C is pressed
+        print('Serving on {}'.format(server.sockets[0].getsockname()))
+        try:
+            self._loop.run_forever()
+        except KeyboardInterrupt:
+            pass
 
-        ## Define an instance of an event loop
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-        # self.loop = asyncio.get_event_loop()
-        ## Tell this event loop to run until all the tasks assigned
-        ## to it are complete. In this example just the execution of
-        ## our myCoroutine() coroutine.
-        self.loop.run_until_complete(self.main())
-        ## Tidying up our loop by calling close()
-        self.loop.close() 
-        print('done')   
+        # Close the server
+        server.close()
+        self._loop.run_until_complete(server.wait_closed())
+        self._loop.close()
 
     def stop(self):
         print('stopping asyncio')
@@ -94,7 +86,7 @@ class myServer:
         # asyncio.stop()
 
 if __name__ == "__main__":
-    server = Server()
+    server = Server(None)
 
     # asyncio.run(server.main())
     server.run()

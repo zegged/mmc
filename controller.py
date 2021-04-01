@@ -2,11 +2,11 @@
 import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('Gst', '1.0')
-from gi.repository import Gtk, Gst  # ,GObject
+from gi.repository import Gtk, Gst, GObject
 from view import myView
 from model import myModel
 
-from test import myServer
+from server import myServer
 
 import threading
 
@@ -46,7 +46,8 @@ class myController(object):
     def message(self, message):
         print('got message',message)
         if message=='add':
-            self._addVideo()
+            GObject.idle_add(self._addVideo)
+            # self._addVideo()
 
     def close_all(self):
         # self._server.stop()
