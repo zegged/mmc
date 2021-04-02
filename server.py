@@ -54,7 +54,7 @@ class myServer:
 
 
     def run(self):
-        coro = asyncio.start_server(self.handle_echo, '127.0.0.1', 8888, loop=self._loop)
+        coro = asyncio.start_server(self.handle_echo, '0.0.0.0', 8888, loop=self._loop)
         server = self._loop.run_until_complete(coro)
         self.aServer = server
         # Serve requests until Ctrl+C is pressed
