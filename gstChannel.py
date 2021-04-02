@@ -19,6 +19,8 @@ class gstChannel:
     #     return self._gtksink
 
     def __init__(self):
+        Gst.debug_set_active(True)
+        Gst.debug_set_default_threshold(3)
         # create pipeline
         print('init pipeline')
         self._pipeline = Gst.Pipeline()
@@ -76,6 +78,11 @@ class gstChannel:
 
         self.bus = self._pipeline.get_bus()
         self.bus.add_signal_watch()
+
+        self.bus.enable_sync_message_emission()
+        self.bus.connect("sync-message::element", self.on_sync_message)
+
+
         self.bus.connect("message", self.on_message)
 
         self._attributes = {} # received from view
@@ -83,7 +90,13 @@ class gstChannel:
 
         self._proccess = []
         self._proccessArgs = []
-        
+
+    def on_sync_message(self, bus, message):
+        print('sync')
+        print(message)
+        # if message.structure is None: 
+        #     return False 
+        # print(message.get_structure())
 
     def on_message(self, bus, message):
         typ = message.type
@@ -95,8 +108,9 @@ class gstChannel:
             # self.player.set_state(Gst.State.NULL)
         elif typ == Gst.MessageType.STATE_CHANGED:
             print(message.parse_state_changed()[1])
-        # else:
-        #     print('else', typ)
+      
+        else:
+            print('else', typ, message.get_structure())
 
 
     def _setAttributes(self, attributes):
@@ -201,13 +215,21 @@ class gstChannel:
         if system=='Windows' or (system=='Linux' and release=='rpi'): # TODO: fix rpi
             sourceStr = """udpsrc name=udpsrc caps = "application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, payload=(int)96" ! rtph264depay ! decodebin ! videoconvert ! queue name=sink"""
         elif system=='Linux' and 'tegra' in release:
-            sourceStr = """udpsrc name=udpsrc caps = "application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, payload=(int)96" ! rtph264depay ! decodebin ! nvvidconv  ! queue name=sink"""
+            sourceStr = """udpsrc name=udpsrc caps = "application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, packetization-mode=(string)1, profile-level-id=(string)f4000d, payload=(int)96, ssrc=(uint)530698261, timestamp-offset=(uint)277692884, seqnum-offset=(uint)20220, a-framerate=(string)30" ! queue ! rtph264depay ! h264parse ! queue ! avdec_h264   ! videoconvert ! videoscale ! queue name=sink"""
+            # avdec_h264
+            # omxh264dec
         
+
         
         
         
         # source = Gst.parse_bin_from_description(sourceStr, True)
         source = Gst.parse_launch(sourceStr) # working, not parse_bin
+
+        # uri_decode_bin
+        # uri_decode_bin.connect("pad-added",self.cb_newpad,source)
+
+
         sink = source.get_by_name("sink")
         # self._output = sink
         # self._gtksink = sink
@@ -215,7 +237,8 @@ class gstChannel:
         # p = Gst.parse_launch(stringPipeline) 
         udpsrc = source.get_by_name("udpsrc")
         # udpsrc.set_property("uri","udp://127.0.0.1:5001")
-        udpsrc.set_property("uri","udp://localhost:5001")
+        # udpsrc.set_property("uri","udp://127.0.0.1:5000")
+        udpsrc.set_property("port",5000)
         self.udpsrc = udpsrc
         
         self._pipeline.add(source)
@@ -229,7 +252,8 @@ class gstChannel:
         # save function that enables us to change attributes:
         def setPortNumber(port):
             print("setting port to",port)
-            self.udpsrc.set_property("uri",f"udp://localhost:{port}")
+            # self.udpsrc.set_property("uri",f"udp://localhost:{port}")
+            self.udpsrc.set_property("port",int(port))
             
         
 
